@@ -1,0 +1,79 @@
+﻿Merhaba,
+
+Proje Monolith  mimaride,
+yukardan aşagıya
+1.API
+2.Sercvice
+3.Helpers
+4.Model 
+
+şeklinde inheritance alınmış durumda.
+kimlik dogrulama işlemleri için identity kütüphanesini kullandım.
+Dependency Injection işlemlerini Services.ConfigIServiceCollection içinde yapıyorum program.cs 
+burdaki bir methodu çagrıyor, buradaki methodda alt methodları çalıştırıyor.
+proje aya kalkarken  program.cs üzerinden   seed  çalıştırılıyor bu seed context içinde gömülü bir method,4 adet kitap ekledim.
+admini orada gömüyorum 
+Admin bilgileri Login: 
+Email : admin@gmail.com  
+Şire :Admin_135
+
+Customerları sen oluştur diye sana bırakıyorum :)
+program.cs ve controller temiz şekilde kullandım.
+kritik nokta stok konusu oraya bir inmemorylock ,ratelimit ile ilgili işlemler yaptım
+2 yerden stoga müdahale edilebiliyor 
+1.Admin => stok ekliyor
+2.Customer => orderItem yaratıyor
+
+
+Lock Şöyle çalışıyor
+ilk gelen istegi kitabı Id ile lockluyor diger gelen dokunamıyor,bir kaç saniye sonra gelin vs diye bir hata atıyorum MemoryCacheHelper detaylı bakarsın,burda bir kaç çözüm olabilirdi,
+şuan üründe 5 stock var ilk gelen 2 alıcak 3 boşta kalıyor ama ikinciyide içeriye almıyorum yazamadım çünkü vaktim kalmadı atmak zorundayım kendi çalıştıgım
+yerdeki projede çok yogun gidiyor,full gece akşam 8 den sonra yazdım projeyi,veya redis lock yapılabilirdi, bir diger çözüm
+her bir istegi kuyruga bırakıp, bir istek çıkınca diger istek alınabilir şeklinde kuyrukta yapı kullanılabilirdi,ama burada front-end bir call daha atmak zorunda kalıyordu.
+
+CreateOrderPolicy bir ratelimiting yazdım CrateOrderItem yaptıgım yere.
+
+BookId bazlı çalışıyor burası her bir istek geldiginde
+BookId ile ilgili bir kayıt atıyor diyelim  bu id ile ilgili bir istek  daha gelirse 3sn  içinde max 50 olucak seviyede kuyrukta tutuyor 3sn 3sn şeklinde içeri alıyor,bir koruma daha diyelim.
+
+bir sql kurman gerek connectionstring degiştirmeyi unutma, migration komutlarında update-database kullanırsın.
+
+Jwt konusunda
+ApiAuthMiddleware tokenı => CurrentUser Service içine atıyor ordan jwtdeki bilgileri yakalıyorum scope boyunca kullanıyorum.
+
+
+Toplam 13 End-Point var bazılarına sadece Admin Bazılarına sadece user ulaşabilir.
+
+CustomerAPI
+1.customer/Login       => Role: Hepsi
+2.customer/Create      => Role:Hepsi => sadece cutomer oluşturur 
+3.customer/customers   => Role:Admim tüm kullanıcıları çeker pagination var.
+4.Customer/GetMyOrders => Role:Customer  customerbazlı siparişleri  çeker !Dikkart OrderITtems boş ise gelmez! burada API CustomerId vs göndermez onları ben JWT alıyorum,pagination var.
+
+BookAPI
+1.Book/Create        => Role:Admin 
+2.Book/AddStock      => Role:Admin  Sadee + yönde stock eklenir.
+3.Book/GetBooks      => Role:Not Need => pagination var/stok burda görünüyor burdan test ederken bakarsın.
+
+OrderAPI
+1.Order/Create      => Role:Customer =>orderId vericek 
+2.Order/CreateOrderItem  => Role :Customer => OrderId  BookId, kaç adet  satın almak istediginin bilgisi
+order içinde varsa update eder kafan şu case de karışmasın
+bir kitaptan 100 adet  var
+  20 aldım => 80 kaldı
+  bu üründen aynı Order içinden bir daha 40 yazarsam bu end-point kalan ürün => 60 olur.
+  10 yazarsa => 90 kalır.
+3.GetById => Role :Customer => bir ürün detayı alırsın 
+4.GetAllOrders => Role Admin => Tüm siparişler görürsün pagination var.
+Statistics
+Statistics/GetAllStatistics => Role: Admin  => içinde bulundugun tüm yıl analizi
+Statistics/GetStatistics =>  Role: Customer  => Customer bazlı içinde bulundugun tüm yıl analizi
+
+CommandResult diye bir model var tüm her şey bunu dönüyor istek başarlıysa =>
+ "isSucceed": true,
+    degilse
+"isSucceed": false =>  oldugu zaman message boş gelmez bakarsın oraya.
+
+Unit test ve logging yazamadım zaman kalmadı.
+
+İyi Çalışmalar

@@ -1,0 +1,15 @@
+﻿global using CodeBase.Services.Middleware;
+global using CodeBase.Services;
+global using Microsoft.AspNetCore.Mvc;
+global using AutoMapper;
+global using CodeBase.Services.IServices;
+global using CodeBase.Models.DTOModels.UserDTOS;
+global using CodeBase.Models.ViewModels;
+global using Microsoft.AspNetCore.Authorization;
+global using CodeBase.Models.DTOModels;
+global using CodeBase.Models.DTOModels.BookDTOS;
+global using CodeBase.Models.DTOModels.OrderDTOS;
+global using Microsoft.AspNetCore.RateLimiting;
+global using Microsoft.AspNetCore.Mvc.ModelBinding;
+global using CodeBase.API.Utils.RateLimiting;
+global using CodeBase.Models.Context;
